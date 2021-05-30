@@ -1,0 +1,65 @@
+###############################################################################
+###############################################################################
+##                                                                           ##
+##      ___  _    _   _ ____ _____ ____ ____                                 ##
+##     / _ \| |  | | | |  __|_   _| ___| __ \                                ##
+##    ( |_| ) |__| |_| |__  | | | | __|  -/ /                                ##
+##     \_  /|____|_____|____| |_| |____|_|\_\                                ##
+##       \/                                       v 0.0                      ##
+##                                                                           ##
+##    Configuration File (For User-Defined Inputs)                           ##
+##                                                                           ##
+## ************************************************************************* ##
+## On lines starting with 'I' are two strings that are read by FORMFLYT.     ##
+## The first string is the input identifier (key). Do not change this!       ##
+## The second string is the input (value) for the user to define.            ##
+## On lines starting with ~, these lines are comments unread by FORMFLYT.    ##
+## ************************************************************************* ##
+##                                                                           ##
+###############################################################################
+###############################################################################
+~:
+~: Set the total scenario propagation duration (s)
+I: duration 43200
+~:
+~: Set the scenario time step (s)
+I: timestep 60
+~:
+~: Input the Chief Semi-Major Axis (km)
+I: orb_a 6878.14
+~:
+~: Input the Chief Eccentricity (0 to 1)
+I: orb_e 0.0
+~: 
+~: Input the Chief Inclination (deg)
+I: orb_i 45.0
+~:
+~: Input the Chief Arg. of Perigee (deg)
+I: orb_w 90.0
+~: 
+~: Input the Chief Right Ascension (deg)
+I: orb_R 90.0
+~: 
+~: Input the Chief Mean Anomaly (deg)
+I: orb_M 135.0
+~: 
+~: Input the Radial Amplitude (km)
+I: form_R 100.0
+~: 
+~: Input the In-Track Amplitude (km)
+I: form_I 200.0
+~: 
+~: Input the In-Track Offset (km)
+I: form_O -250.0
+~: 
+~: Input the Cross-Track Amplitude (km)
+I: form_C 75.0
+~:
+~: Input the Argument of Relative Pericenter (deg)
+I: form_phi 0.0
+~: 
+~: Input the Argument of Latitude Crossing (deg)
+I: form_tht -180.0
+~: 
+###############################################################################
+###############################################################################
