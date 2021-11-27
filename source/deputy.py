@@ -34,8 +34,8 @@
 ##       Orbit. PhD Dissertation, TU Delft.                                  ##
 ##                                                                           ##
 ##    Written by Samuel Y. W. Low.                                           ##
-##    First created 20-May-2020 18:00 PM (+8 GMT)                            ##
-##    Last modified 20-May-2020 20:09 PM (+8 GMT)                            ##
+##    First created 20-May-2021 18:00 PM (+8 GMT)                            ##
+##    Last modified 20-May-2021 20:09 PM (+8 GMT)                            ##
 ##                                                                           ##
 ###############################################################################
 ###############################################################################
@@ -44,33 +44,54 @@ import numpy as np
 from source import anomaly
 
 def deputy(td, ts, aC, eC, iC, wC, RC, MC, fR, fI, fO, fC, fPhi, fTht):
-    
     '''
-    Input Parameters (14 arguments)
-    -------------------------------
-    - td   = Propagation Duration (s)
-    - ts   = Propagation Timestep (s)
-    - aC   = Chief Orbit Semi-Major Axis (km)
-    - eC   = Chief Orbit Eccentricity (0 to 1)
-    - iC   = Chief Orbit Inclination (rad)
-    - wC   = Chief Orbit Arg. of Perigee (rad)
-    - RC   = Chief Orbit Right Ascension (rad)
-    - MC   = Chief Orbit Mean Anomaly (rad)
-    - fR   = Formation Radial Amplitude (km)
-    - fI   = Formation In-Track Amplitude (km)
-    - fO   = Formation In-Track Offset (km)
-    - fC   = Formation Cross-Track Amplitude (km)
-    - fPhi = Argument of Relative Pericenter (rad)
-    - fTht = Argument of Latitude Crossing (rad)
+
+    Parameters
+    ----------
+    td : int
+        Propagation Duration (s)
+    ts : int
+        Propagation Timestep (s)
+    aC : float
+        Chief Orbit Semi-Major Axis (km)
+    eC : float
+        Chief Orbit Eccentricity (0 to 1)
+    iC : float
+        Chief Orbit Inclination (deg)
+    wC : float
+        Chief Orbit Arg. of Perigee (deg)
+    RC : float
+        Chief Orbit Right Ascension (deg)
+    MC : float
+        Chief Orbit Mean Anomaly (deg)
+    fR : float
+        Formation Radial Amplitude (km)
+    fI : float
+        Formation In-Track Amplitude (km)
+    fO : float
+        Formation In-Track Offset (km)
+    fC : float
+        Formation Cross-Track Amplitude (km)
+    fPhi : float
+        Argument of Relative Pericenter (rad)
+    fTht : float
+        Argument of Latitude Crossing (rad)
     
-    Output Values (6 values returned)
-    ---------------------------------
-    - aD   = Deputy Orbit Semi-Major Axis (km)
-    - eD   = Deputy Orbit Eccentricity (0 to 1)
-    - iD   = Deputy Orbit Inclination (rad)
-    - wD   = Deputy Orbit Arg. of Perigee (rad)
-    - RD   = Deputy Orbit Right Ascension (rad)
-    - MD   = Deputy Orbit Mean Anomaly (rad)
+    Returns
+    -------
+    aD : float
+        Deputy Orbit Semi-Major Axis (km)
+    eD : float
+        Deputy Orbit Eccentricity (0 to 1)
+    iD : float
+        Deputy Orbit Inclination (rad)
+    wD : float
+        Deputy Orbit Arg. of Perigee (rad)
+    RD : float
+        Deputy Orbit Right Ascension (rad)
+    MD : float
+        Deputy Orbit Mean Anomaly (rad)
+
     '''
     
     # Convert all angles from degrees to radians.
@@ -111,7 +132,7 @@ def deputy(td, ts, aC, eC, iC, wC, RC, MC, fR, fI, fO, fC, fPhi, fTht):
     # if the user has specified a non-zero offset in the variable fO, then
     # this offset must be applied to the deputy satellite formation center.
     offset = fO / aD
-    nuD = wC + nuC - wD + offset
+    nuD = nuC + wC - wD + ( ( RD - RC ) * np.cos(iC) ) + offset
     MD = anomaly.V2M( nuD, eD )
     
     # Finally, re-convert all angular output into degrees.

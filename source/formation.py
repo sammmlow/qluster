@@ -17,8 +17,8 @@
 ##    two sets of Nx3 NumPy matrices, where N = total number of samples.     ##
 ##                                                                           ##
 ##    Written by Samuel Y. W. Low.                                           ##
-##    First created 16-May-2020 15:56 AM (+8 GMT)                            ##
-##    Last modified 20-May-2020 18:00 PM (+8 GMT)                            ##
+##    First created 16-May-2021 15:56 AM (+8 GMT)                            ##
+##    Last modified 20-May-2021 18:00 PM (+8 GMT)                            ##
 ##                                                                           ##
 ###############################################################################
 ###############################################################################
@@ -27,36 +27,56 @@ import numpy as np
 from source import posvel
 
 def propagate(td, ts, aC, eC, iC, wC, RC, MC, aD, eD, iD, wD, RD, MD):
+    '''Core function used for relative trajectory generation.
+    
+    Parameters
+    ----------
+    td : int
+        Propagation Duration (s)
+    ts : int
+        Propagation Timestep (s)
+    aC : float
+        Chief Orbit Semi-Major Axis (km)
+    eC : float
+        Chief Orbit Eccentricity (0 to 1)
+    iC : float
+        Chief Orbit Inclination (deg)
+    wC : float
+        Chief Orbit Arg. of Perigee (deg)
+    RC : float
+        Chief Orbit Right Ascension (deg)
+    MC : float
+        Chief Orbit Mean Anomaly (deg)
+    aD : float
+        Deputy Orbit Semi-Major Axis (km)
+    eD : float
+        Deputy Orbit Eccentricity (0 to 1)
+    iD : float
+        Deputy Orbit Inclination (deg)
+    wD : float
+        Deputy Orbit Arg. of Perigee (deg)
+    RD : float
+        Deputy Orbit Right Ascension (deg)
+    MD : float
+        Deputy Orbit Mean Anomaly (deg)
+    
+    Returns
+    -------
+    rpx : numpy.ndarray
+        Array of all sampled X-Coordinate Hill-Frame positions (km)
+    rpy : numpy.ndarray
+        Array of all sampled Y-Coordinate Hill-Frame positions (km)
+    rpz : numpy.ndarray
+        Array of all sampled Z-Coordinate Hill-Frame positions (km)
+    rvx : numpy.ndarray
+        Array of all sampled X-Coordinate Hill-Frame velocities (km/s)
+    rvy : numpy.ndarray
+        Array of all sampled Y-Coordinate Hill-Frame velocities (km/s)
+    rvz : numpy.ndarray
+        Array of all sampled Z-Coordinate Hill-Frame velocities (km/s)
     
     '''
-    Core method for relative trajectory generation.
-
-    Input Arguments:
-    ----------------
-    - td = Propagation Duration (s)
-    - ts = Propagation Timestep (s)
-    - aC = Chief Orbit Semi-Major Axis (km)
-    - eC = Chief Orbit Eccentricity (0 to 1)
-    - iC = Chief Orbit Inclination (deg)
-    - wC = Chief Orbit Arg. of Perigee (deg)
-    - RC = Chief Orbit Right Ascension (deg)
-    - MC = Chief Orbit Mean Anomaly (deg)
-    - aD = Deputy Orbit Semi-Major Axis (km)
-    - eD = Deputy Orbit Eccentricity (0 to 1)
-    - iD = Deputy Orbit Inclination (deg)
-    - wD = Deputy Orbit Arg. of Perigee (deg)
-    - RD = Deputy Orbit Right Ascension (deg)
-    - MD = Deputy Orbit Mean Anomaly (deg)
     
-    Returns 06x NumPy arrays
-    ------------------------
-    - X-Coordinate Hill-Frame positions
-    - Y-Coordinate Hill-Frame positions
-    - Z-Coordinate Hill-Frame positions
-    - X-Coordinate Hill-Frame velocities
-    - Y-Coordinate Hill-Frame velocities
-    - Z-Coordinate Hill-Frame velocities
-    '''
     #########################################################################
     #########################################################################
     ###                                                                   ###
@@ -177,7 +197,7 @@ def propagate(td, ts, aC, eC, iC, wC, RC, MC, aD, eD, iD, wD, RD, MD):
         rvy.append( (relVel[1] * vCMag) )
         rvz.append( (relVel[2] * vCMag) )
     
-    # Save the entire relativeEphem matrix.
+    # Save the entire relative ephemeris matrix.
     rpx = np.array( rpx ) * ( 1 )
     rpy = np.array( rpy ) * ( 1 )
     rpz = np.array( rpz ) * (-1 )

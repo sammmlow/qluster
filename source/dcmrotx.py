@@ -23,10 +23,18 @@
 import numpy as np
 
 def dcmX(t):
+    '''Generate the direction cosine matrix for an X-axis rotation of angle t.
     
-    '''
-    Input theta (t) is the scalar angle (in radians).
-    Output is a 3x3 direction cosine matrix.
+    Parameters
+    ----------
+    t : float
+        Angle theta (t) is the scalar angle (in radians).
+
+    Returns
+    -------
+    dcm : numpy.ndarray
+        Numpy 3x3 direction cosine matrix.
+    
     '''
     
     dcm = np.array([[ 1.0,    0.0,       0.0       ],

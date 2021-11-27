@@ -22,95 +22,139 @@
 ###############################################################################
 
 import numpy as np
-from source import kepler
 
-# Mean anomaly to eccentric anomaly conversion.
+###############################################################################
+###############################################################################
+
 def M2E(M,e):
+    '''Mean anomaly to eccentric anomaly conversion via Keplers Equation (rad).
+    
+    Parameters
+    ----------
+    M : float
+        Mean Anomaly (rad)
+    e : float
+        Eccentricity (unit-less)
+    
+    Returns
+    -------
+    E2 : float
+        Eccentric anomaly (rad)
     
     '''
-    Convert mean anomaly (rad) into eccentric anomaly (rad).
     
-    Inputs: Mean anomaly and eccentricity
-    - M -> Mean anomaly (rad)
-    - e -> Eccentricity (dimensionless)
+    E1 = M         # Initialise eccentric anomaly
+    ei = e         # Initialise the float eccentricity
+    residual = 1.0 # Initialise convergence residual
     
-    Returns: Eccentric anomaly (rad)
-    '''
-    
-    return kepler.solve(M,e)
+    while residual >= 0.000001:
+        
+        fn = E1 - (ei*np.sin(E1)) - M
+        fd = 1 - (ei*np.cos(E1))
+        E2 = E1 - (fn/fd)
+        residual = abs(E2-E1) # Compute residual
+        E1 = E2 # Update the eccentric anomaly
+        
+    return E2
 
-# Mean anomaly to true anomaly conversion.
+###############################################################################
+###############################################################################
+
 def M2V(M,e):
+    '''Mean anomaly to true anomaly conversion via Keplers Equation (rad).
     
-    '''
-    Convert mean anomaly (rad) into true anomaly (rad)
+    Parameters
+    ----------
+    M : float
+        Mean Anomaly (rad)
+    e : float
+        Eccentricity (unit-less)
     
-    Inputs: Mean anomaly and eccentricity
-    - M -> Mean Anomaly (rad)
-    - e -> Eccentricity (dimensionless)
+    Returns
+    -------
+    nu : float
+        True anomaly (rad)
     
-    Returns: True anomaly (rad)
     '''
     
     # First, let us solve for the eccentric anomaly.
-    eccAnom = kepler.solve(M,e)
+    eccAnom = M2E(M,e)
     
     # With the eccentric anomaly, we can solve for position and velocity
-    # in the local orbital frame, using the polar equation for an ellipse.
+    # in the perifocal (PQW) frame, using the polar equation for an ellipse.
     pos_X = np.cos(eccAnom) - e
     pos_Y = np.sqrt( 1 - e**2 ) * np.sin(eccAnom)
     
-    # Finally, let us not forget to compute the true anomaly.
+    # Finally, let us compute the true anomaly.
     nu = np.arctan2( pos_Y, pos_X ) 
     
-    # Position vector 1x3 (km), velocity vetor 1x3 (km/s), true anomaly (rad)
     return nu
 
-# True anomaly to eccentric anomaly conversion.
+###############################################################################
+###############################################################################
+
 def V2E(nu,e):
+    '''True anomaly to eccentric anomaly conversion (rad).
     
-    '''
-    Convert true anomaly (rad) into eccentric anomaly (rad)
+    Parameters
+    ----------
+    nu : float
+        True anomaly (rad)
+    e : float
+        Eccentricity (unit-less)
     
-    Inputs: True anomaly, eccentricity
-    - nu -> True Anomaly (rad)
-    - e  -> Eccentricity (dimensionless)
+    Returns
+    -------
+    E : float
+        Eccentric anomaly (rad)
     
-    Returns: Eccentric anomaly (rad)
     '''
     
     E = 2 * np.arctan( np.sqrt( ( 1 - e ) / ( 1 + e ) ) * np.tan( nu / 2 ) )
     return E
 
-# Eccentric anomaly to mean anomaly conversion.
+###############################################################################
+###############################################################################
+
 def E2M(E,e):
+    '''Eccentric anomaly to mean anomaly conversion (rad). Note that this uses
+    the original Keplers equation M = E - e*sin(E).
     
-    '''
-    Convert eccentric anomaly (rad) into mean anomaly (rad)
-    Note this uses the original Keplers equation M = E - e \sin{E}
+    Parameters
+    ----------
+    E : float
+        Eccentric anomaly (rad)
+    e : float
+        Eccentricity (unit-less)
     
-    Inputs: True anomaly, eccentricity
-    - E -> Eccentric Anomaly (rad)
-    - e -> Eccentricity (dimensionless)
+    Returns
+    -------
+    M : float
+        Mean Anomaly (rad)
     
-    Returns: Mean anomaly (rad)
     '''
     
     M = E - e * np.sin(E)
     return M
 
-# True anomaly to mean anomaly conversion.
+###############################################################################
+###############################################################################
+
 def V2M(nu,e):
+    '''True anomaly to mean anomaly conversion (rad).
     
-    '''
-    Convert true anomaly (rad) into mean anomaly (rad)
-    Note this uses the V2E and E2M function as an intermediary
+    Parameters
+    ----------
+    nu : float
+        True anomaly (rad)
+    e : float
+        Eccentricity (unit-less)
     
-    Inputs: True anomaly, eccentricity
-    - E -> Eccentric Anomaly (rad)
-    - e -> Eccentricity (dimensionless)
+    Returns
+    -------
+    M : float
+        Mean Anomaly (rad)
     
-    Returns: Mean anomaly (rad)
     '''
     
     return E2M( V2E(nu,e), e )

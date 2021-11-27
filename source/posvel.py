@@ -21,25 +21,39 @@
 ###############################################################################
 
 import numpy as np
-from source import kepler
+from source import anomaly
 from source import dcmrotx
 from source import dcmrotz
 
 def posvel(a, e, i, w, R, M):
+    '''Returns three objects: an inertial position vector (1x3 NumPy array),
+    an inertial velocity vector (1x3), and a true anomaly value (float), when
+    ingesting six osculating Keplerian orbit elements.
     
-    '''
-    Inputs: Keplerian elements and gravitational constant.
-    - a   -> Semi-major axis (km)
-    - e   -> Eccentricity (one)
-    - i   -> Inclination (rad)
-    - w   -> Argument of Perigee (rad)
-    - R   -> Right Angle of Asc Node (rad)
-    - M   -> Mean Anomaly (rad)
+    Parameters
+    ----------
+    a : float
+        Semi-major axis (km)
+    e : float
+        Eccentricity (unit-less)
+    i : float
+        Inclination (rad)
+    w : float
+        Argument of Perigee (rad)
+    R : float
+        Right Angle of Asc Node (rad)
+    M : float
+        Mean Anomaly (rad)
 
-    Output: Inertial position vector, velocity vector, and true anomaly
-    - pos -> inertial position (1x3 vector, km)
-    - vel -> inertial velocity (1x3 vector, km/s)
-    - nu  -> true anomaly (float, rad)
+    Returns Inertial position vector, velocity vector, and true anomaly
+    -------
+    pos : numpy.ndarray
+        Inertial position vector (1x3 vector, km)
+    vel : numpy.ndarray
+        Inertial velocity vector (1x3 vector, km/s)
+    nu  : numpy.float64
+        True anomaly (float, rad)
+    
     '''
     
     # Ensure the conversion of the attractor's gravitational constant.
@@ -51,7 +65,7 @@ def posvel(a, e, i, w, R, M):
     # by performing a 3-1-3 Euler Angle rotation using an appropriate DCM.
     
     # First, let us solve for the eccentric anomaly.
-    eccAnom = kepler.solve(M,e)
+    eccAnom = anomaly.M2E(M,e)
     
     # With the eccentric anomaly, we can solve for position and velocity
     # in the local orbital frame, using the polar equation for an ellipse.

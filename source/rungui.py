@@ -22,6 +22,7 @@
 ###############################################################################
 
 # Import global libraries
+import numpy as np
 import tkinter as tk
 import tkinter.font
 from PIL import Image, ImageTk
@@ -32,11 +33,32 @@ from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 
 # Import the local libraries
 from source import deputy
-from source import relative
+from source import formation
 
 
 class RunGUI():
-
+    
+    '''This class represents the entire QLUSTER GUI, as a TKinter object.
+    The constructor takes in a single tkinter.Tk() object as the root GUI.
+    All buttons in the GUI are linked to the methods described below.
+    
+    Methods
+    -------
+    cfg_R( self )
+        This method does two things. First, this method checks that all inputs
+        in config.txt are correct. Second, it copies the input parameters into
+        the GUI (as TKinter variables).
+    cfg_W( self )
+        This method does two things. First, this method checks that all inputs
+        in the GUI are correct. Second, it copies the GUI parameters into the
+        config.txt file, overwriting it.
+    clr( self )
+        Clears all existing relative orbit plots in the QLUSTER GUI.
+    run( self )
+        Run the QLUSTER program using the leorun.py script and plots the
+        relative trajectory.
+    '''
+    
     def __init__(self, master):
         
         '''
@@ -109,6 +131,14 @@ class RunGUI():
         self.var_fPhi = tk.DoubleVar() # Argument of Relative Pericenter (deg)
         self.var_fTht = tk.DoubleVar() # Argument of Latitude Crossing (deg)
         
+        # Initialise the arrays for relative position and velocity solutions.
+        self.rpx = np.array([]) # Array for Radial Separations (km)
+        self.rpy = np.array([]) # Array for In-Track Separations (km)
+        self.rpz = np.array([]) # Array for Cross-Track Separations (km)
+        self.rvx = np.array([]) # Array for Radial Rates (km/s)
+        self.rvy = np.array([]) # Array for In-Track Rates (km/s)
+        self.rvz = np.array([]) # Array for Cross-Track Rates (km/s)
+        
         #####################################################################
         #####################################################################
         ###                                                               ###
@@ -157,11 +187,9 @@ class RunGUI():
         self.logBtn.configure(bg="light blue")
         
         # Add a button to run QLUSTER.
-        self.runBtn = tk.Button(master, text='Run Program', command=self.run)
+        self.runBtn = tk.Button(master, text='Run QLUSTER', command=self.run)
         self.runBtn.grid(row=0, column=8, padx=20, pady=5)
         self.runBtn.configure(bg="light blue")
-        
-        
         
         #####################################################################
         #####################################################################
@@ -363,7 +391,7 @@ class RunGUI():
         #####################################################################
         #####################################################################
         ###                                                               ###
-        ###  Create input text boxes for chief satellite orbit elements   ###
+        ###      Create inputs for formation plane angle parameters       ###
         ###                                                               ###
         #####################################################################
         #####################################################################
@@ -426,9 +454,9 @@ class RunGUI():
         
         # Create the 3D axes matplotlib figure object, using the pack() method
         # of tkinter within the toolbarFrame object.
-        self.orbFig = Figure(figsize=(7,6), dpi=100,
+        self.orbFig = Figure(figsize=(6,5), dpi = master.winfo_fpixels('2.0c'),
                              linewidth=8, edgecolor="#DDDDDD")
-        self.orbFig.set_tight_layout(True)
+        # self.orbFig.set_tight_layout(True)
         self.orbPlot = FigureCanvasTkAgg(self.orbFig, self.toolbarFrame)
         self.orbPlot.get_tk_widget().pack(expand=True)
         
@@ -470,10 +498,9 @@ class RunGUI():
     def cfg_R(self):
         
         '''
-        Method to read the config.txt file:
-        -----------------------------------
-        1) First, this method checks that all inputs in config.txt are correct
-        2) Second, it copies the input parameters into the GUI's variables
+        This method does two things. First, this method checks that all inputs
+        in config.txt are correct. Second, it copies the input parameters into
+        the GUI's TKinter variables.
         '''
         
         cwd = dirname(dirname(abspath(__file__))) # Current working directory
@@ -534,7 +561,7 @@ class RunGUI():
         #####################################################################
         #####################################################################
         ###                                                               ###
-        ###   Parsing through the config.txt file to extract parameters   ###
+        ###  Parsing through the inputs dictionary to verify parameters   ###
         ###                                                               ###
         #####################################################################
         #####################################################################
@@ -544,10 +571,10 @@ class RunGUI():
         self.var_td.set(inps['duration'])
         if inps['duration'] <= 0:
             errmsg = 'Scenario duration cannot be zero or negative! \n'
-            self.errtx_td.configure(text='Error!')
+            self.errtx_td.configure(text='!')
         elif inps['duration'] > 31536000:
             errmsg = 'Scenario duration cannot be longer than a year! \n'
-            self.errtx_td.configure(text='Error!')
+            self.errtx_td.configure(text='!')
         else:
             errmsg = ''
             self.errtx_td.configure(text='')
@@ -556,13 +583,13 @@ class RunGUI():
         self.var_ts.set(inps['timestep'])
         if inps['timestep'] <= 0:
             errmsg = 'Scenario step size cannot be zero or negative! \n'
-            self.errtx_ts.configure(text='Error!')
+            self.errtx_ts.configure(text='!')
         elif inps['timestep'] > inps['duration']:
             errmsg = 'Scenario step cannot be larger than the duration! \n'
-            self.errtx_ts.configure(text='Error!')
+            self.errtx_ts.configure(text='!')
         elif inps['timestep'] > 31536000:
             errmsg = 'Scenario step size cannot be longer than a year! \n'
-            self.errtx_ts.configure(text='Error!')
+            self.errtx_ts.configure(text='!')
         else:
             errmsg = ''
             self.errtx_ts.configure(text='')
@@ -576,10 +603,10 @@ class RunGUI():
         self.var_aC.set(inps['orb_a'])
         if inps['orb_a'] < 6378.14:
             errmsg = 'Semi-major axis below Earth surface! \n'
-            self.errtx_aC.configure(text='Error!')
+            self.errtx_aC.configure(text='!')
         elif inps['orb_a'] > 385000.0:
             errmsg = 'Semi-major axis beyond Earth orbit! \n'
-            self.errtx_aC.configure(text='Error!')
+            self.errtx_aC.configure(text='!')
         else:
             errmsg = ''
             self.errtx_aC.configure(text='')
@@ -593,13 +620,13 @@ class RunGUI():
         self.var_eC.set(inps['orb_e'])
         if inps['orb_e'] < 0:
             errmsg = 'Eccentricity cannot be < 0! \n'
-            self.errtx_eC.configure(text='Error!')
+            self.errtx_eC.configure(text='!')
         elif inps['orb_e'] >= 1.0:
             errmsg = 'Eccentricity cannot be >= 1! \n'
-            self.errtx_eC.configure(text='Error!')
+            self.errtx_eC.configure(text='!')
         elif ( ( 1 - inps['orb_e'] ) * inps['orb_a'] ) < 6378.14:
             errmsg = 'Perigee altitude below Earth surface! \n'
-            self.errtx_eC.configure(text='Error!')
+            self.errtx_eC.configure(text='!')
         else:
             errmsg = ''
             self.errtx_eC.configure(text='')
@@ -613,7 +640,7 @@ class RunGUI():
         self.var_iC.set(inps['orb_i'])
         if inps['orb_i'] < -180.0 or inps['orb_i'] > 180.0:
             errmsg = 'Inclination angle must be between +/- 180! \n'
-            self.errtx_iC.configure(text='Error!')
+            self.errtx_iC.configure(text='!')
         else:
             errmsg = ''
             self.errtx_iC.configure(text='')
@@ -627,7 +654,7 @@ class RunGUI():
         self.var_wC.set(inps['orb_w'])
         if inps['orb_w'] < -180.0 or inps['orb_w'] > 180.0:
             errmsg = 'Argument of Perigee must be between +/- 180! \n'
-            self.errtx_wC.configure(text='Error!')
+            self.errtx_wC.configure(text='!')
         else:
             errmsg = ''
             self.errtx_wC.configure(text='')
@@ -641,7 +668,7 @@ class RunGUI():
         self.var_RC.set(inps['orb_R'])
         if inps['orb_R'] < -180.0 or inps['orb_R'] > 180.0:
             errmsg = 'Right ascension must be between +/- 180! \n'
-            self.errtx_RC.configure(text='Error!')
+            self.errtx_RC.configure(text='!')
         else:
             errmsg = ''
             self.errtx_RC.configure(text='')
@@ -655,7 +682,7 @@ class RunGUI():
         self.var_MC.set(inps['orb_M'])
         if inps['orb_M'] < -180.0 or inps['orb_M'] > 180.0:
             errmsg = 'Mean anomaly must be between +/- 180! \n'
-            self.errtx_MC.configure(text='Error!')
+            self.errtx_MC.configure(text='!')
         else:
             errmsg = ''
             self.errtx_MC.configure(text='')
@@ -669,10 +696,10 @@ class RunGUI():
         self.var_fR.set(inps['form_R'])
         if inps['form_R'] < 0:
             errmsg = 'Radial separation cannot be negative! \n'
-            self.errtx_fR.configure(text='Error!')
+            self.errtx_fR.configure(text='!')
         elif inps['form_R'] > 1000.0:
             errmsg = 'Radial separation cannot exceed 1000 km! \n'
-            self.errtx_fR.configure(text='Error!')
+            self.errtx_fR.configure(text='!')
         else:
             if inps['form_R'] * 2 == inps['form_I']:
                 errmsg = ''
@@ -690,10 +717,10 @@ class RunGUI():
         self.var_fI.set(inps['form_I'])
         if inps['form_I'] < 0:
             errmsg = 'In-track separation cannot be negative! \n'
-            self.errtx_fI.configure(text='Error!')
+            self.errtx_fI.configure(text='!')
         elif inps['form_I'] > 2000.0:
             errmsg = 'In-track separation cannot exceed 2000 km! \n'
-            self.errtx_fI.configure(text='Error!')
+            self.errtx_fI.configure(text='!')
         else:
             if inps['form_R'] * 2 == inps['form_I']:
                 errmsg = ''
@@ -706,10 +733,10 @@ class RunGUI():
         self.var_fO.set(inps['form_O'])
         if inps['form_O'] < -1000.0:
             errmsg = 'In-track offset cannot be < -1000 km! \n'
-            self.errtx_fO.configure(text='Error!')
+            self.errtx_fO.configure(text='!')
         elif inps['form_O'] > 1000.0:
             errmsg = 'In-track offset cannot be > 1000 km! \n'
-            self.errtx_fO.configure(text='Error!')
+            self.errtx_fO.configure(text='!')
         else:
             errmsg = ''
             self.errtx_fO.configure(text='')
@@ -723,10 +750,10 @@ class RunGUI():
         self.var_fC.set(inps['form_C'])
         if inps['form_C'] < 0:
             errmsg = 'Cross-track separation cannot be negative! \n'
-            self.errtx_fC.configure(text='Error!')
+            self.errtx_fC.configure(text='!')
         elif inps['form_C'] > 2000.0:
             errmsg = 'Cross-track separation cannot exceed 2000 km! \n'
-            self.errtx_fC.configure(text='Error!')
+            self.errtx_fC.configure(text='!')
         else:
             errmsg = ''
             self.errtx_fC.configure(text='')
@@ -740,7 +767,7 @@ class RunGUI():
         self.var_fPhi.set(inps['form_phi'])
         if inps['form_phi'] < -180.0 or inps['form_phi'] > 180.0:
             errmsg = 'Relative Pericenter must be between +/- 180! \n'
-            self.errtx_fPhi.configure(text='Error!')
+            self.errtx_fPhi.configure(text='!')
         else:
             errmsg = ''
             self.errtx_fPhi.configure(text='')
@@ -754,7 +781,7 @@ class RunGUI():
         self.var_fTht.set(inps['form_tht'])
         if inps['form_tht'] < -180.0 or inps['form_tht'] > 180.0:
             errmsg = 'Latitude Crossing must be between +/- 180! \n'
-            self.errtx_fTht.configure(text='Error!')
+            self.errtx_fTht.configure(text='!')
         else:
             errmsg = ''
             self.errtx_fTht.configure(text='')
@@ -783,10 +810,9 @@ class RunGUI():
     def cfg_W(self):
         
         '''
-        Method to write the config.txt file:
-        -----------------------------------
-        1) First, this method checks that all inputs in the GUI are correct
-        2) Second, it copies the GUI parameters into the config.txt file
+        This method does two things. First, this method checks that all inputs
+        in the GUI are correct. Second, it copies the GUI parameters into the
+        config.txt file after all checks are complete.
         '''
         
         # Reset the GUI error message variable.
@@ -820,17 +846,17 @@ class RunGUI():
             _td = self.var_td.get() # Exception raised if entry is erroneous
             if _td <= 0:
                 errmsg = 'Scenario duration cannot be zero or negative! \n'
-                self.errtx_td.configure(text='Error!')
+                self.errtx_td.configure(text='!')
             elif _td > 31536000:
                 errmsg = 'Scenario duration cannot be longer than a year! \n'
-                self.errtx_td.configure(text='Error!')
+                self.errtx_td.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_td.configure(text='')
         except:
             _td = 86400
             self.var_td.set(86400) # Reset to default 86400s (1 day)
-            errmsg = 'Error! Expected an integer for scenario duration (s)! \n'
+            errmsg = 'Expected an integer for scenario duration (s)! \n'
         finally:
             self.error_msgprint += errmsg
             
@@ -838,20 +864,20 @@ class RunGUI():
             _ts = self.var_ts.get() # Exception raised if entry is erroneous
             if _ts <= 0:
                 errmsg = 'Scenario step size cannot be zero or negative! \n'
-                self.errtx_ts.configure(text='Error!')
+                self.errtx_ts.configure(text='!')
             elif _ts > _td:
                 errmsg = 'Scenario step cannot be larger than the duration! \n'
-                self.errtx_ts.configure(text='Error!')
+                self.errtx_ts.configure(text='!')
             elif _ts > 31536000:
                 errmsg = 'Scenario step size cannot be longer than a year! \n'
-                self.errtx_ts.configure(text='Error!')
+                self.errtx_ts.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_ts.configure(text='')
         except:
             _ts = 1
             self.var_ts.set(1) # Reset to default 86400s (1 day)
-            errmsg = 'Error! Expected an integer for scenario step size (s)! \n'
+            errmsg = 'Expected an integer for scenario step size (s)! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -863,17 +889,17 @@ class RunGUI():
             _aC = self.var_aC.get() # Exception raised if entry is erroneous
             if _aC < 6378.14:
                 errmsg = 'Semi-major axis below Earth surface! \n'
-                self.errtx_aC.configure(text='Error!')
+                self.errtx_aC.configure(text='!')
             elif _aC > 385000.0:
                 errmsg = 'Semi-major axis beyond Earth orbit! \n'
-                self.errtx_aC.configure(text='Error!')
+                self.errtx_aC.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_aC.configure(text='')
         except:
             _aC = 0.0
             self.var_aC.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for Semi-Major Axis (km)! \n'
+            errmsg = 'Expected a float for Semi-Major Axis (km)! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -885,19 +911,19 @@ class RunGUI():
             _eC = self.var_eC.get() # Exception raised if entry is erroneous
             if _eC < 0:
                 errmsg = 'Eccentricity cannot be < 0! \n'
-                self.errtx_eC.configure(text='Error!')
+                self.errtx_eC.configure(text='!')
             elif _eC >= 1.0:
                 errmsg = 'Eccentricity cannot be >= 1! \n'
-                self.errtx_eC.configure(text='Error!')
+                self.errtx_eC.configure(text='!')
             elif ( ( 1 - _eC ) * _aC ) < 6378.14:
                 errmsg = 'Perigee altitude below Earth surface! \n'
-                self.errtx_eC.configure(text='Error!')
+                self.errtx_eC.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_eC.configure(text='')
         except:
             self.var_eC.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the eccentricity! \n'
+            errmsg = 'Expected a float for the eccentricity! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -909,13 +935,13 @@ class RunGUI():
             _iC = self.var_iC.get() # Exception raised if entry is erroneous
             if _iC < -180.0 or _iC > 180.0:
                 errmsg = 'Inclination angle must be between +/- 180! \n'
-                self.errtx_iC.configure(text='Error!')
+                self.errtx_iC.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_iC.configure(text='')
         except:
             self.var_iC.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the inclination! \n'
+            errmsg = 'Expected a float for the inclination! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -927,13 +953,13 @@ class RunGUI():
             _wC = self.var_wC.get() # Exception raised if entry is erroneous
             if _wC < -180.0 or _wC > 180.0:
                 errmsg = 'Argument of Perigee must be between +/- 180! \n'
-                self.errtx_wC.configure(text='Error!')
+                self.errtx_wC.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_wC.configure(text='')
         except:
             self.var_wC.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the argument of perigee! \n'
+            errmsg = 'Expected a float for the argument of perigee! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -945,13 +971,13 @@ class RunGUI():
             _RC = self.var_RC.get() # Exception raised if entry is erroneous
             if _RC < -180.0 or _RC > 180.0:
                 errmsg = 'Right ascension must be between +/- 180! \n'
-                self.errtx_RC.configure(text='Error!')
+                self.errtx_RC.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_RC.configure(text='')
         except:
             self.var_RC.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the right ascension! \n'
+            errmsg = 'Expected a float for the right ascension! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -963,13 +989,13 @@ class RunGUI():
             _MC = self.var_MC.get() # Exception raised if entry is erroneous
             if _MC < -180.0 or _MC > 180.0:
                 errmsg = 'Mean anomaly must be between +/- 180! \n'
-                self.errtx_MC.configure(text='Error!')
+                self.errtx_MC.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_MC.configure(text='')
         except:
             self.var_MC.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the mean anomaly! \n'
+            errmsg = 'Expected a float for the mean anomaly! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -982,10 +1008,10 @@ class RunGUI():
             _fI = self.var_fI.get() # Exception raised if entry is erroneous
             if _fR < 0.0:
                 errmsg = 'Radial separation cannot be negative! \n'
-                self.errtx_fR.configure(text='Error!')
+                self.errtx_fR.configure(text='!')
             elif _fR > 1000.0:
                 errmsg = 'Radial separation cannot exceed 1000 km! \n'
-                self.errtx_fR.configure(text='Error!')
+                self.errtx_fR.configure(text='!')
             else:
                 if _fR * 2 == _fI:
                     errmsg = ''
@@ -998,8 +1024,8 @@ class RunGUI():
                     self.errtx_fR.configure(text='')
         except:
             self.var_fR.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the radial separation! \n'
-            errmsg += 'Error! Expected a float for the in-track separation! \n'
+            errmsg = 'Expected a float for the radial separation! \n'
+            errmsg += 'Expected a float for the in-track separation! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -1011,16 +1037,16 @@ class RunGUI():
             _fI = self.var_fI.get() # Exception raised if entry is erroneous
             if _fI < 0.0:
                 errmsg = 'In-track separation cannot be negative! \n'
-                self.errtx_fI.configure(text='Error!')
+                self.errtx_fI.configure(text='!')
             elif _fI > 2000.0:
                 errmsg = 'In-track separation cannot exceed 2000 km! \n'
-                self.errtx_fI.configure(text='Error!')
+                self.errtx_fI.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_fI.configure(text='')
         except:
             self.var_fI.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the in-track separation! \n'
+            errmsg = 'Expected a float for the in-track separation! \n'
         finally:
             self.error_msgprint += errmsg
             
@@ -1028,16 +1054,16 @@ class RunGUI():
             _fO = self.var_fO.get() # Exception raised if entry is erroneous
             if _fO < -1000.0:
                 errmsg = 'In-track offset cannot be < -1000 km! \n'
-                self.errtx_fO.configure(text='Error!')
+                self.errtx_fO.configure(text='!')
             elif _fO > 1000.0:
                 errmsg = 'In-track offset cannot be > 1000 km! \n'
-                self.errtx_fO.configure(text='Error!')
+                self.errtx_fO.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_fO.configure(text='')
         except:
             self.var_fO.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the in-track offset! \n'
+            errmsg = 'Expected a float for the in-track offset! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -1049,16 +1075,16 @@ class RunGUI():
             _fC = self.var_fC.get() # Exception raised if entry is erroneous
             if _fC < 0.0:
                 errmsg = 'Cross-track separation cannot be negative! \n'
-                self.errtx_fC.configure(text='Error!')
+                self.errtx_fC.configure(text='!')
             elif _fC > 2000.0:
                 errmsg = 'Cross-track separation cannot exceed 2000 km! \n'
-                self.errtx_fC.configure(text='Error!')
+                self.errtx_fC.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_fC.configure(text='')
         except:
             self.var_fC.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for cross-track separation! \n'
+            errmsg = 'Expected a float for cross-track separation! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -1070,13 +1096,13 @@ class RunGUI():
             _fPhi = self.var_fPhi.get() # Exception raised if entry is erroneous
             if _fPhi < -180.0 or _fPhi > 180.0:
                 errmsg = 'Relative pericenter must be between +/- 180! \n'
-                self.errtx_fPhi.configure(text='Error!')
+                self.errtx_fPhi.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_fPhi.configure(text='')
         except:
             self.var_fPhi.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the relative pericenter! \n'
+            errmsg = 'Expected a float for the relative pericenter! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -1088,13 +1114,13 @@ class RunGUI():
             _fTht = self.var_fTht.get() # Exception raised if entry is erroneous
             if _fTht < -180.0 or _fTht > 180.0:
                 errmsg = 'Latitude crossing must be between +/- 180! \n'
-                self.errtx_fTht.configure(text='Error!')
+                self.errtx_fTht.configure(text='!')
             else:
                 errmsg = ''
                 self.errtx_fTht.configure(text='')
         except:
             self.var_fTht.set(0.0) # Reset to default 0.0
-            errmsg = 'Error! Expected a float for the latitude crossing! \n'
+            errmsg = 'Expected a float for the latitude crossing! \n'
         finally:
             self.error_msgprint += errmsg
         
@@ -1103,7 +1129,7 @@ class RunGUI():
         
         # Finally, display an error textbox if there are any error messages.
         if len(self.error_msgprint) > 0:
-            tk.messagebox.showerror("Error with Configuration File!",
+            tk.messagebox.showerror("Error with Inputs!",
                                     self.error_msgprint)
             self.error_msgprint = '' # Reset error message
             return None
@@ -1189,21 +1215,37 @@ class RunGUI():
                                                    fR, fI, fO, fC,
                                                    fPhi, fTht)
             
-            print('Deputy: ', aD, eD, iD, wD, RD, MD)
-            print('Chief: ', aC, eC, iC, wC, RC, MC, '\n')
-            
             # Perform the relative orbit propagation.
-            rpx, rpy, rpz, rvx, rvy, rvz = relative.propagate(td, ts,
-                                                              aC, eC, iC,
-                                                              wC, RC, MC,
-                                                              aD, eD, iD,
-                                                              wD, RD, MD)
+            rpx, rpy, rpz, rvx, rvy, rvz = formation.propagate(td, ts,
+                                                               aC, eC, iC,
+                                                               wC, RC, MC,
+                                                               aD, eD, iD,
+                                                               wD, RD, MD)
+            
+            # Save the relative trajectories as an attribute of the GUI.
+            self.rpx = rpx # Array for Radial Separations (km)
+            self.rpy = rpy # Array for In-Track Separations (km)
+            self.rpz = rpz # Array for Cross-Track Separations (km)
+            self.rvx = rvx # Array for Radial Rates (km/s)
+            self.rvy = rvy # Array for In-Track Rates (km/s)
+            self.rvz = rvz # Array for Cross-Track Rates (km/s)
+            
+            # Save the relative ephemeris as an attribute of the GUI
+            self.aD, self.aC = aD, aC # Deputy & Chief Semi-Major Axis (km)
+            self.eD, self.eC = eD, eC # Deputy & Chief Eccentricity (0 to 1)
+            self.iD, self.iC = iD, iC # Deputy & Chief Inclination (deg)
+            self.wD, self.wC = wD, wC # Deputy & Chief Arg. of Perigee (deg)
+            self.RD, self.RC = RD, RC # Deputy & Chief Right Ascension (deg)
+            self.MD, self.MC = MD, MC # Deputy & Chief Mean Anomaly (deg)
             
             # Plot the results in the GUI.           
             self.orbAxis.plot( rpz, # Cross-Track
                                rpy, # In-Track
                                rpx, # Radial Axis
                                label='Relative Orbit in Hill-Frame')
+            
+            # Plot the initial trajectory of the deputy.
+            self.orbAxis.scatter( rpz[0], rpy[0], rpx[0] )
             
             # Update the plots
             self.orbPlot.draw()
@@ -1242,6 +1284,18 @@ class RunGUI():
             # Update the plots
             self.orbPlot.draw()
             
+            # Round to 3 decimal places.
+            aC, aD = round(aC,5), round(aD,5)
+            eC, eD = round(eC,5), round(eD,5)
+            iC, iD = round(iC,5), round(iD,5)
+            wC, wD = round(wC,5), round(wD,5)
+            RC, RD = round(RC,5), round(RD,5)
+            MC, MD = round(MC,5), round(MD,5)
+            
+            # Print out the final orbit elements of the deputy.
+            print('Deputy: ', aD, eD, iD, wD, RD, MD)
+            print('Chief: ', aC, eC, iC, wC, RC, MC, '\n')
+            
         except Exception as excpt:
             print('Error in running!')
             print(excpt)
@@ -1263,6 +1317,66 @@ class RunGUI():
         Logs the ephemeris into a CSV file after running the QLUSTER program.
         '''
         
+        try:
+            
+            # First, get the scenario time steps and duration.
+            ts = self.var_ts.get()
+            
+            # Create a CSV file to write into.
+            fileout = open('ephemeris.csv', 'w')
+            fileout.write('Time, ')                     # Header for Column 1
+            fileout.write('Radial_(km), ')              # Header for Column 2
+            fileout.write('InTrack_(km), ')             # Header for Column 3
+            fileout.write('CrossTrack_(km), ')          # Header for Column 4
+            fileout.write('Radial_Rate_(km/s), ')       # Header for Column 5
+            fileout.write('InTrack_Rate_(km/s), ')      # Header for Column 6
+            fileout.write('CrossTrack_Rate_(km/s) \n')  # Header for Column 7
+            
+            # Now start writing.
+            for k in range( 0, len(self.rpx) ):
+                fileout.write( str( k * ts ) + ', ' )
+                fileout.write( '{:.6f}'.format(self.rpx[k]) + ', ' )
+                fileout.write( '{:.6f}'.format(self.rpy[k]) + ', ' )
+                fileout.write( '{:.6f}'.format(self.rpz[k]) + ', ' )
+                fileout.write( '{:.6f}'.format(self.rvx[k]) + ', ' )
+                fileout.write( '{:.6f}'.format(self.rvy[k]) + ', ' )
+                fileout.write( '{:.6f}'.format(self.rvz[k]) + '\n' )
+            fileout.close()
+            
+            # Create a CSV file to write into.
+            fileout = open('elements.csv', 'w')
+            
+            fileout.write( 'Agent, ' ) # Header for Column 1
+            fileout.write( 'a, ' )     # Header for Column 2
+            fileout.write( 'e, ' )     # Header for Column 3
+            fileout.write( 'i, ' )     # Header for Column 4
+            fileout.write( 'w, ' )     # Header for Column 5
+            fileout.write( 'R, ' )     # Header for Column 6
+            fileout.write( 'M \n' )    # Header for Column 7
+            
+            fileout.write( 'Chief, ' )
+            fileout.write( '{:.6f}'.format(self.aC) + ', ' )
+            fileout.write( '{:.6f}'.format(self.eC) + ', ' )
+            fileout.write( '{:.6f}'.format(self.iC) + ', ' )
+            fileout.write( '{:.6f}'.format(self.wC) + ', ' )
+            fileout.write( '{:.6f}'.format(self.RC) + ', ' )
+            fileout.write( '{:.6f}'.format(self.MC) + '\n' )
+            
+            fileout.write( 'Deputy, ' )
+            fileout.write( '{:.6f}'.format(self.aD) + ', ' )
+            fileout.write( '{:.6f}'.format(self.eD) + ', ' )
+            fileout.write( '{:.6f}'.format(self.iD) + ', ' )
+            fileout.write( '{:.6f}'.format(self.wD) + ', ' )
+            fileout.write( '{:.6f}'.format(self.RD) + ', ' )
+            fileout.write( '{:.6f}'.format(self.MD) + '\n' )
+            
+            print('Relative orbit propagation results saved! \n')
+            
+        except Exception as excpt:
+            print('Error in logging data! Make sure you run QLUSTER first! \n')
+            print(excpt)
+            pass
+        
         return None
     
     #########################################################################
@@ -1280,6 +1394,9 @@ class RunGUI():
         '''
         
         self.orbAxis.clear()
+        self.orbAxis.set_xlabel('Hill Frame Cross-Track Axis (km)')
+        self.orbAxis.set_ylabel('Hill Frame In-Track Axis (km)')
+        self.orbAxis.set_zlabel('Hill Frame Radial Axis (km)')
         self.orbPlot.draw()
         
         return None
